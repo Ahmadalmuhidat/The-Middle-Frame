@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.contrib.auth.hashers import make_password, check_password
 from django.views.decorators.csrf import csrf_exempt
 from ..helpers import jsonWebTokenHelper
-from ..models.user import user
+from ..models.user import User
 
 @csrf_exempt
 def login(request):
@@ -15,16 +15,18 @@ def login(request):
         "error": "Method not allowed"
       }, status=405)
 
-    email = request.POST.get("email")
-    password = request.POST.get("password")
+    request_body = json.loads(request.body)
+
+    email = request_body.get("email")
+    password = request_body.get("password")
 
     if not email or not password:
       return JsonResponse({
         "success": False,
         "error": "Email and password are required"
       }, status=400)
-    
-    user_object = user_object.objects.get(email=email)
+
+    user_object = User.objects.get(email=email)
 
     if not check_password(password, user_object.password):
       return JsonResponse({
@@ -47,7 +49,7 @@ def login(request):
       }
     }, status=200)
 
-  except user.DoesNotExist:
+  except User.DoesNotExist:
     return JsonResponse({
       "success": False,
       "error": "Invalid email or password"
@@ -66,11 +68,14 @@ def register(request):
         "success": False,
         "error": "Method not allowed"
       }, status=405)
+    
 
-    username = request.POST.get("username")
-    email = request.POST.get("email")
-    password = request.POST.get("password")
-    role = request.POST.get("role")
+    request_body = json.loads(request.body)
+
+    username = request_body.get("username")
+    email = request_body.get("email")
+    password = request_body.get("password")
+    role = request_body.get("role")
     
     if not username or not email or not password or not role:
       return JsonResponse({
@@ -84,19 +89,19 @@ def register(request):
         "error": "Role must be either 'uploader' or 'buyer'"
       }, status=400)
     
-    if user.objects.filter(email=email).exists():
+    if User.objects.filter(email=email).exists():
       return JsonResponse({
         "success": False,
         "error": "User with this email already exists"
       }, status=409)
     
-    if user.objects.filter(username=username).exists():
+    if User.objects.filter(username=username).exists():
       return JsonResponse({
         "success": False,
         "error": "User with this username already exists"
       }, status=409)
 
-    new_user_object = user.objects.create(
+    new_user_object = User.objects.create(
       username=username,
       email=email,
       password=make_password(password),

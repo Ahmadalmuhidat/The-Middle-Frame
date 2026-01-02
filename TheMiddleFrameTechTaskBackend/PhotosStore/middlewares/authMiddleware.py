@@ -3,7 +3,7 @@ import jwt
 from django.http import JsonResponse
 from django.utils.deprecation import MiddlewareMixin
 from ..helpers.jsonWebTokenHelper import decode
-from ..models.user import user
+from ..models.user import User
 
 class authMiddleware(MiddlewareMixin):
   EXCLUDED_PATHS = [
@@ -79,11 +79,11 @@ class authMiddleware(MiddlewareMixin):
           "error": "Invalid token: user ID not found" 
         }, status=401)
 
-      request.user_obj = user.objects.get(id=user_id)
+      request.user_obj = User.objects.get(id=user_id)
       request.user_role = request.user_obj.role
       request.user_id = user_id
 
-    except user.DoesNotExist:
+    except User.DoesNotExist:
       return JsonResponse({ 
         "success": False, 
         "error": "User not found" 

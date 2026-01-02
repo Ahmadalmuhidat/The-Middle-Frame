@@ -1,5 +1,6 @@
-from .user import user
-from .photo import photo
+from .user import User
+from .photo import Photo
 
-__all__ = ['user', 'photo']
+__all__ = ['User', 'Photo']
+
 

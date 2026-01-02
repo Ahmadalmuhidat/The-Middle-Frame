@@ -1,23 +1,33 @@
 import os
+import traceback
 
 from django.utils.deprecation import MiddlewareMixin
 
 class loggerMiddleware(MiddlewareMixin):
   def __init__(self, get_response):
     super().__init__(get_response)
-    os.makedirs('logs', exist_ok=True)
+    self.logs_dir = "PhotosStore/logs"
 
-  def logRequest(self, request):
-    with open('logs/request.log', 'a') as logsFile:
-      logsFile.write(f"Request: {request.method} {request.path}\n")
-    return True
-  
-  def logResponse(self, response):
-    with open('response.log', 'a') as logsFile:
-      logsFile.write(f"Response: {response.status_code} {response.content} {response.headers}\n")
-    return True
+    os.makedirs(self.logs_dir, exist_ok=True)
 
-  def logError(self, error):
-    with open('error.log', 'a') as logsFile:
-      logsFile.write(f"Error: {error.message} {error.traceback}\n")
-    return True
+  def process_request(self, request):
+    try:
+      body = request.body.decode("utf-8") if request.body else ""
+    except:
+      body = "<could not decode>"
+    with open(f"{self.logs_dir}/request.log", "a") as logs_file:
+      logs_file.write(f"Request: {request.method} {request.path} {body}\n")
+
+  def process_response(self, request, response):
+    try:
+      content = response.content.decode("utf-8") if hasattr(response, "content") else ""
+    except:
+      content = "<could not decode>"
+    with open(f"{self.logs_dir}/response.log", "a") as logs_file:
+      logs_file.write(f"Response: {response.status_code} {content}\n")
+    return response
+
+  def process_exception(self, request, exception):
+    tb = traceback.format_exc()
+    with open(f"{self.logs_dir}/error.log", "a") as logs_file:
+      logs_file.write(f"Exception: {str(exception)}\n{tb}\n")

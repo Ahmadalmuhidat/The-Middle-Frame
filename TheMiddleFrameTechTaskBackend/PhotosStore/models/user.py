@@ -1,6 +1,6 @@
 from django.db import models
 
-class user(models.Model):
+class User(models.Model):
   username = models.CharField(max_length=255)
   email = models.EmailField(max_length=255)
   password = models.CharField(max_length=255)
@@ -8,5 +8,5 @@ class user(models.Model):
   created_at = models.DateTimeField(auto_now_add=True)
   
   class Meta:
-    ordering = ['-created_at']
-    db_table = 'users'
+    ordering = ["-created_at"]
+    db_table = "users"
