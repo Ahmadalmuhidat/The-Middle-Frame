@@ -9,6 +9,12 @@ class authMiddleware(MiddlewareMixin):
   EXCLUDED_PATHS = [
     "/api/auth/register",
     "/api/auth/login",
+    "/media/",
+  ]
+
+  PUBLIC_GET_PATHS = [
+    "/api/photos/",
+    "/api/albums/",
   ]
 
   def decodeToken(self, token: str):
@@ -55,6 +61,9 @@ class authMiddleware(MiddlewareMixin):
     """
     try:
       if any(request.path.startswith(path) for path in self.EXCLUDED_PATHS):
+        return None
+
+      if request.method == "GET" and any(request.path.startswith(path) for path in self.PUBLIC_GET_PATHS):
         return None
 
       token = None
