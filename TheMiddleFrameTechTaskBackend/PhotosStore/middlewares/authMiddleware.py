@@ -7,13 +7,13 @@ from ..models.user import user
 
 class authMiddleware(MiddlewareMixin):
   EXCLUDED_PATHS = [
-    '/api/users/register',
-    '/api/users/login',
+    "/api/auth/register",
+    "/api/auth/login",
   ]
 
-  def decodeToken(self, token):
+  def decodeToken(self, token: str):
     """
-    Decodes a JWT (JSON Web Token) and retrieves the information it contains.
+    Decodes a JWT and retrieves the information it contains.
 
     Args:
       token (str): The encoded JWT as a string.
@@ -27,11 +27,20 @@ class authMiddleware(MiddlewareMixin):
       return decoded_token
 
     except jwt.ExpiredSignatureError:
-      return None
+      return JsonResponse({ 
+        "success": False, 
+        "error": "Token is expired" 
+      }, status=401)
     except jwt.InvalidTokenError:
-      return None
+      return JsonResponse({ 
+        "success": False, 
+        "error": "Invalid token" 
+      }, status=401)
     except Exception as e:
-      return None
+      return JsonResponse({ 
+        "success": False, 
+        "error": e 
+      }, status=500)
 
   def process_request(self, request):
     """
@@ -44,49 +53,43 @@ class authMiddleware(MiddlewareMixin):
       None: If the request is valid.
       JsonResponse: If the request is invalid.
     """
-
-    if any(request.path.startswith(path) for path in self.EXCLUDED_PATHS):
-      return None
-
-    token = None
-
-    auth_header = request.META.get('HTTP_AUTHORIZATION', '')
-    if auth_header.startswith('Bearer '):
-      token = auth_header.split('Bearer ')[1]
-
-    if not token:
-      return JsonResponse({ 
-        "success": False, 
-        "error": "Token is required. Please provide token in Authorization header (Bearer token)." 
-      }, status=401)
-
-    decoded_token = self.decodeToken(token)
-    
-    if decoded_token is None:
-      return JsonResponse({ 
-        "success": False, 
-        "error": "Invalid or expired token" 
-      }, status=401)
-
-    # Get user ID from token
-    user_id = decoded_token.get('id') or decoded_token.get('user_id')
-    
-    if not user_id:
-      return JsonResponse({ 
-        "success": False, 
-        "error": "Invalid token: user ID not found" 
-      }, status=401)
-
-    # Get user from database
     try:
+      if any(request.path.startswith(path) for path in self.EXCLUDED_PATHS):
+        return None
+
+      token = None
+      auth_header = request.META.get("HTTP_AUTHORIZATION", "")
+
+      if auth_header.startswith("Bearer "):
+        token = auth_header.split("Bearer ")[1]
+
+      if not token:
+        return JsonResponse({ 
+          "success": False, 
+          "error": "Token is required. Please provide token in Authorization header (Bearer token)." 
+        }, status=401)
+
+      decoded_token = self.decodeToken(token)
+
+      user_id = decoded_token.get("id")
+      
+      if not user_id:
+        return JsonResponse({ 
+          "success": False, 
+          "error": "Invalid token: user ID not found" 
+        }, status=401)
+
       request.user_obj = user.objects.get(id=user_id)
       request.user_role = request.user_obj.role
       request.user_id = user_id
+
     except user.DoesNotExist:
       return JsonResponse({ 
         "success": False, 
         "error": "User not found" 
       }, status=401)
-    
-    return None
-
+    except Exception as e:
+      return JsonResponse({
+        "success": False,
+        "error": f"An error occurred: {str(e)}"
+      }, status=500)
