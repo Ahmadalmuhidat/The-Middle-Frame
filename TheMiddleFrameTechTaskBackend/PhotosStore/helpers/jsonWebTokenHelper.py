@@ -21,7 +21,7 @@ def encode(info: dict) -> str:
     algorithm='HS256'
   )
 
-def decode(token: str):
+def decode(token: str) -> dict:
   """
   Decodes a JWT (JSON Web Token) and retrieves the information it contains.
 
