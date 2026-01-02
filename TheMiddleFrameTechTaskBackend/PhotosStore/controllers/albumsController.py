@@ -4,24 +4,6 @@ from ..models.album import Album
 from ..models.photo import Photo
 
 @csrf_exempt
-def getAlbums(request):
-  if request.method != "GET":
-    return JsonResponse({"success": False, "error": "Method not allowed"}, status=405)
-
-  albums = Album.objects.select_related('user').all()
-  data = []
-  for album in albums:
-    first_photo = Photo.objects.filter(album=album).first()
-    data.append({
-      "id": album.id,
-      "title": album.title,
-      "uploader": album.user.username,
-      "photo_count": Photo.objects.filter(album=album).count(),
-      "cover_image": first_photo.compressed_image.url if first_photo and first_photo.compressed_image else None
-    })
-  return JsonResponse(data, safe=False)
-
-@csrf_exempt
 def getAlbumDetails(request, album_id):
   try:
     if request.method != "GET":
