@@ -23,7 +23,7 @@ also we can see Grafana and Prometheus which are used to monitor the system, and
 
 ### Activity Diagram
 the following activity diagram shows the workflow of the main features of the application while uploading photos:
-![Activity Diagram](assets/activity_diagram.png)
+![Activity Diagram](assets/upload_photo_AD.png)
 
 ## Getting Started
 
